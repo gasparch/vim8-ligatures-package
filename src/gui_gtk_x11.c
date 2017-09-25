@@ -6050,11 +6050,44 @@ gui_gtk2_draw_string(int row, int col, char_u *s, int len, int flags)
 	    && !((flags & DRAW_BOLD) && gui.font_can_bold)
 	    && gui.ascii_glyphs != NULL)
     {
-	char_u *p;
+	/* Check global variable gtk_nocache to get a list of integers
+	 * describing a bit map of ASCII characters (< 128) for which to
+	 * disable the ASCII glyph cache (and hence enable ligatures for fonts
+	 * that support them).
+	 *
+	 * To bypass the glyph cache for anything but control characters,
+	 * space, 0-9, A-Z, a-z, DEL, use:
+	 *
+	 * let g:gtk_nocache=[0x00000000, 0xfc00ffff, 0xf8000001, 0x78000001]
+	 */
+	static char_u* vname = (char_u*) "g:gtk_nocache";
+	dictitem_T *di = find_var(vname, NULL, FALSE);
+	list_T* l = (NULL == di || VAR_LIST != di->di_tv.v_type) ?
+	    NULL : di->di_tv.vval.v_list;
 
-	for (p = s; p < s + len; ++p)
-	    if (*p & 0x80)
-		goto not_ascii;
+	if (NULL == l || 4 != list_len(l)) {
+	    /* simple case: always go through cache for characters < 128 */
+	    char_u *p, *q;
+	    for (p = s, q = s + len; p < q; ++p)
+		if (*p & 0x80)
+		    goto not_ascii;
+	} else {
+	    /* complicated case: get bitmap, check which characters bypass
+	     * the cache */
+	    listitem_T* li = l->lv_first;
+	    guint32 bmap[4];
+	    char_u *p, *q;
+	    bmap[0] = (int) get_tv_number(&li->li_tv);
+	    li = li->li_next;
+	    bmap[1] = (int) get_tv_number(&li->li_tv);
+	    li = li->li_next;
+	    bmap[2] = (int) get_tv_number(&li->li_tv);
+	    li = li->li_next;
+	    bmap[3] = (int) get_tv_number(&li->li_tv);
+	    for (p = s, q = s + len; p < q; ++p)
+		if (*p & 0x80 || (1 & (bmap[*p >> 5] >> (*p & 31))))
+		    goto not_ascii;
+	}
 
 	pango_glyph_string_set_size(glyphs, len);
 
