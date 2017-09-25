@@ -32,7 +32,7 @@ This repository provides build automation to
 # Fully automated way
 
 You will need `Docker` and `docker-compose` installed.
-Build in done inside Docker image to avoid polluting host system will all
+Build in done inside Docker image to avoid polluting host system with all
 development packages.
 
 Just run in top directory
@@ -83,5 +83,5 @@ If you want to run separate steps in build process - check build.sh.
 ## Build process hangs on 'Copying files to the temporary directory...'
 
 This is slowest part of checkinstall which is used to create package.
-Go dring some water or tea or coffee.
+Go drink some water or tea or coffee.
 It usually takes 5-10 minutes to assemble package with a lot of small files.
