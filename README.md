@@ -32,7 +32,7 @@ This repository provides build automation to
 # Fully automated way
 
 You will need `Docker` and `docker-compose` installed.
-Build in done inside Docker image to avoid polluting host system with all
+Build is done inside Docker image to avoid polluting host system with all
 development packages.
 
 Just run in top directory
